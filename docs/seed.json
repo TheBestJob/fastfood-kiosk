@@ -1,0 +1,14 @@
+{
+  "menu": [
+    {"id":"burger","name":"Classic Burger","category":"Burgers","description":"Beef patty, pickles, lettuce and house sauce.","price":2490,"active":true},
+    {"id":"chicken","name":"Crispy Chicken","category":"Burgers","description":"Crunchy chicken, slaw and pepper mayo.","price":2690,"active":true},
+    {"id":"veggie","name":"Veggie Burger","category":"Burgers","description":"Bean patty, roasted peppers and garlic sauce.","price":2390,"active":true},
+    {"id":"fries","name":"Skin-on Fries","category":"Sides","description":"Golden fries with sea salt.","price":990,"active":true},
+    {"id":"rings","name":"Onion Rings","category":"Sides","description":"Crisp battered onion rings.","price":1190,"active":true},
+    {"id":"lemonade","name":"House Lemonade","category":"Drinks","description":"Lemon, mint and sparkling water.","price":890,"active":true}
+  ],
+  "offer":{"name":"","percent":0},
+  "orders":[],
+  "next":1,
+  "call":null
+}
