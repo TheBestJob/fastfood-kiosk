@@ -198,7 +198,7 @@ app.addEventListener('input', event => {
 app.addEventListener('click', event => {
   const control = event.target.closest('[data-action]');
   if (!control || busy) return;
-  const {action, value} = control.dataset;
+  const {action, value = ''} = control.dataset;
   if (action === 'print') { window.print(); return; }
   if (action === 'sound') {
     sound ||= new AudioContext();
