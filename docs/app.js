@@ -12,6 +12,7 @@ const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp
 const view = () => location.hash.slice(1).split('/')[0] || 'kiosk';
 let state;
 let basket = {};
+let category = 'All items';
 let orderId = uid();
 let editing = null;
 let busy = false;
@@ -60,17 +61,26 @@ async function commit(action) {
 
 function kiosk() {
   const items = state.menu.filter(item => item.active);
+  const categories = ['All items', ...new Set(items.map(item => item.category))];
+  if (!categories.includes(category)) category = 'All items';
+  const visibleItems = items.filter(item => category === 'All items' || item.category === category);
+  const filterTabs = categories.map(name => '<button type="button" class="filter" data-action="category" data-value="' +
+    esc(name) + '" aria-pressed="' + (name === category) + '">' + esc(name) + '</button>').join('');
   const subtotal = Object.entries(basket).reduce((sum,[id,line]) => sum + (items.find(item => item.id === id)?.price || 0) * line.quantity,0);
   const discount = Math.round(subtotal * state.offer.percent / 100);
-  const cards = items.map(item => '<article class="card"><span class="category">' + esc(item.category) + '</span><h3>' + esc(item.name) + '</h3><p class="muted">' + esc(item.description) + '</p><div class="row"><strong>' + money(item.price) + '</strong>' + button('Add to order','add',item.id) + '</div></article>').join('');
+  const menuArt = {Burgers:'🍔',Sides:'🍟',Drinks:'🥤'};
+  const itemArt = {rings:'🧅',lemonade:'🍋'};
+  const cards = visibleItems.map(item => '<article class="card"><div class="menu-art" data-category="' + esc(item.category) +
+    '" aria-hidden="true">' + (itemArt[item.id] || menuArt[item.category] || '🍽️') + '</div><span class="category">' + esc(item.category) + '</span><h3>' + esc(item.name) + '</h3><p class="muted">' + esc(item.description) + '</p><div class="row"><strong>' + money(item.price) + '</strong>' + button('Add to order','add',item.id) + '</div></article>').join('');
   const cart = Object.entries(basket).map(([id,line]) => {
     const item = state.menu.find(entry => entry.id === id);
     return '<div class="line"><div class="row"><strong>' + esc(item?.name || 'Unavailable item') + '</strong><span>' + (item?.active ? money(item.price * line.quantity) : 'Sold out') + '</span></div><div class="actions">' + button('−','minus',id,'secondary') + '<span>' + line.quantity + '</span>' + button('+','add',id,'secondary') + '</div><label>Item notes<input maxlength="140" data-note="' + esc(id) + '" value="' + esc(line.note) + '" placeholder="E.g. no pickles"></label></div>';
   }).join('');
   const unavailable = Object.keys(basket).some(id => !items.some(item => item.id === id));
-  return intro('What are you having?', 'Build your order here, then pay at the counter.') +
+  return '<section class="hero"><div><h1>What are you<br>having?</h1><p>Build your order here, then pay at the counter.</p></div></section>' +
     (state.offer.percent ? '<div class="panel ready">' + esc(state.offer.name) + ' · ' + state.offer.percent + '% off</div>' : '') +
-    '<div class="layout"><div class="cards">' + (cards || empty('The menu is currently closed.')) + '</div><aside class="panel"><h2>Your order</h2>' +
+    '<div class="layout kiosk-layout"><section><div class="row menu-heading"><h2>Explore the menu</h2></div><div class="filters" role="group" aria-label="Menu categories">' + filterTabs +
+    '</div><div class="cards">' + (cards || empty('The menu is currently closed.')) + '</div></section><aside class="panel order-panel"><h2>Your order</h2>' +
     (cart || empty('Your basket is empty.')) + (discount ? '<p>Discount ' + money(discount) + '</p>' : '') +
     '<div class="row line"><strong>Total</strong><strong>' + money(subtotal - discount) + '</strong></div><button class="primary" data-action="place"' +
     (!cart || unavailable || busy ? ' disabled' : '') + '>Place order</button></aside></div>';
@@ -194,6 +204,13 @@ app.addEventListener('click', event => {
     sound ||= new AudioContext();
     sound.resume();
     draw(true);
+    return;
+  }
+  if (action === 'category') {
+    category = value;
+    draw(true);
+    const selected = app.querySelector('.filter[aria-pressed="true"]');
+    selected?.focus();
     return;
   }
   if (action === 'edit') { editing = value; draw(true); return; }
